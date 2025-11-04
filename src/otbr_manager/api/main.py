@@ -9,7 +9,9 @@ from contextlib import asynccontextmanager
 
 from ..database import init_db
 from ..config import settings
-from .routes import routers, devices, topologies, firmware, attenuators, sensors
+from .routes import routers, devices, topologies, firmware, attenuators, sensors, commissioning
+from ..core.otbr_agent import otbr_agent
+from ..core.mdns_discovery import mdns_discovery
 
 
 # Configure logging
@@ -27,9 +29,37 @@ async def lifespan(app: FastAPI):
     logger.info("Starting OT-BRM API...")
     init_db()
     logger.info("Database initialized")
+
+    # Connect to OTBR agent
+    try:
+        await otbr_agent.connect()
+        logger.info("Connected to OTBR agent")
+    except Exception as e:
+        logger.warning(f"Could not connect to OTBR agent: {e}")
+
+    # Start mDNS discovery
+    try:
+        await mdns_discovery.start()
+        logger.info("mDNS discovery started")
+    except Exception as e:
+        logger.warning(f"Could not start mDNS discovery: {e}")
+
     yield
+
     # Shutdown
     logger.info("Shutting down OT-BRM API...")
+
+    # Stop mDNS discovery
+    try:
+        await mdns_discovery.stop()
+    except Exception:
+        pass
+
+    # Disconnect from OTBR
+    try:
+        await otbr_agent.disconnect()
+    except Exception:
+        pass
 
 
 # Create FastAPI app
@@ -89,6 +119,7 @@ app.include_router(topologies.router, prefix="/api/v1/topologies", tags=["Topolo
 app.include_router(firmware.router, prefix="/api/v1/firmware", tags=["Firmware"])
 app.include_router(attenuators.router, prefix="/api/v1/attenuators", tags=["Attenuators"])
 app.include_router(sensors.router, prefix="/api/v1/sensors", tags=["Sensors"])
+app.include_router(commissioning.router, prefix="/api/v1/commissioning", tags=["Commissioning"])
 
 
 if __name__ == "__main__":
