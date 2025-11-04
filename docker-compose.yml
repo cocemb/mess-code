@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: otbr-manager-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./firmware:/app/firmware
+      - ./logs:/app/logs
+      - ./otbr_manager.db:/app/otbr_manager.db
+    environment:
+      - DATABASE_URL=sqlite:///./otbr_manager.db
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: otbr-manager-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # Optional: PostgreSQL for production
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: otbr-manager-db
+  #   environment:
+  #     POSTGRES_USER: otbr
+  #     POSTGRES_PASSWORD: changeme
+  #     POSTGRES_DB: otbr_manager
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+# volumes:
+#   postgres_data:
