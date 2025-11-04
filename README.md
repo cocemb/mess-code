@@ -12,6 +12,17 @@ A scalable, production-ready management system for OpenThread Border Routers wit
 - **Network Management**: Form, join, and manage Thread networks
 - **Device Diagnostics**: Ping, neighbor tables, router tables
 
+### ☁️ Cloud Connectivity (Production-Ready)
+- **MQTT Bridge**: Industry-standard MQTT 3.1.1/5.0 support
+- **AWS IoT Core**: Native AWS IoT SDK integration with X.509 certificates
+- **Azure IoT Hub**: Azure IoT Device SDK with device twins
+- **Google Cloud IoT**: Google Cloud IoT integration
+- **TLS/mTLS**: Encrypted communication with certificate auth
+- **Device Shadows**: Digital twin support for device state
+- **Bidirectional**: Cloud-to-device commands and device-to-cloud telemetry
+- **Automatic Publishing**: Configurable telemetry intervals
+- **Multiple Connections**: Connect to multiple cloud platforms simultaneously
+
 ### 🌐 Border Router Management
 - Register and manage multiple OpenThread Border Routers
 - Real-time status monitoring and metrics
@@ -171,48 +182,95 @@ temperature = await coap_client.read_sensor("fd00::1234", "/temperature")
 await coap_client.control_actuator("fd00::1234", "/led", True)
 ```
 
+### Cloud Connectivity
+
+```bash
+# Connect to AWS IoT Core
+curl -X POST http://localhost:8000/api/v1/cloud/connections \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "aws-iot",
+    "connection_type": "aws_iot",
+    "config": {
+      "endpoint": "xxxxx.iot.us-east-1.amazonaws.com",
+      "cert_path": "/path/to/certificate.pem.crt",
+      "key_path": "/path/to/private.pem.key",
+      "ca_path": "/path/to/AmazonRootCA1.pem"
+    }
+  }'
+
+# Start cloud manager (begins automatic telemetry publishing)
+curl -X POST http://localhost:8000/api/v1/cloud/start
+
+# Manually publish telemetry
+curl -X POST http://localhost:8000/api/v1/cloud/telemetry/publish \
+  -d '{
+    "device_id": "0011223344556677",
+    "data": {"temperature": 23.5, "humidity": 45}
+  }'
+```
+
 ## Example Scripts
 
 See the `examples/` directory for complete usage examples:
 
 - `basic_usage.py` - Common operations
 - `scale_test.py` - 1000+ device scale testing
+- `cloud_usage.py` - Cloud connectivity examples
+- `cloud_config.yaml` - Cloud configuration templates
 
 ## Documentation
 
 - **API Documentation**: `http://localhost:8000/docs` (when running)
 - **OTBR Setup Guide**: [docs/OTBR_SETUP.md](docs/OTBR_SETUP.md)
+- **Cloud Connectivity Guide**: [docs/CLOUD_CONNECTIVITY.md](docs/CLOUD_CONNECTIVITY.md)
 - **Architecture**: See below
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────┐
-│         OT-BRM Application                  │
-│  ┌────────────────────────────────────────┐ │
-│  │      REST API (FastAPI)                │ │
-│  └────────────┬───────────────────────────┘ │
-│               │                              │
-│  ┌────────────┴───────────────────────────┐ │
-│  │  Commissioner │ CoAP │ mDNS Discovery  │ │
-│  └────────────┬───────────────────────────┘ │
-│               │                              │
-│  ┌────────────┴───────────────────────────┐ │
-│  │     OTBR Agent (ot-ctl interface)      │ │
-│  └────────────┬───────────────────────────┘ │
-└───────────────┼──────────────────────────────┘
+                    ☁️ Cloud Platforms
+         ┌──────────────┴──────────────┐
+         │  AWS IoT │ Azure │ MQTT     │
+         └──────────────┬──────────────┘
+                        │ MQTT/TLS
+                        │
+┌───────────────────────┼────────────────────────┐
+│         OT-BRM Application                     │
+│  ┌────────────────────┴──────────────────────┐ │
+│  │      REST API (FastAPI)                   │ │
+│  └────────────┬──────────────────────────────┘ │
+│               │                                 │
+│  ┌────────────┴──────────────────────────────┐ │
+│  │  Cloud Manager │ Telemetry │ Commands     │ │
+│  └────────────┬──────────────────────────────┘ │
+│               │                                 │
+│  ┌────────────┴──────────────────────────────┐ │
+│  │  Commissioner │ CoAP │ mDNS Discovery     │ │
+│  └────────────┬──────────────────────────────┘ │
+│               │                                 │
+│  ┌────────────┴──────────────────────────────┐ │
+│  │     OTBR Agent (ot-ctl interface)         │ │
+│  └────────────┬──────────────────────────────┘ │
+└───────────────┼─────────────────────────────────┘
                 │
-┌───────────────┼──────────────────────────────┐
-│  OpenThread Border Router (OTBR)            │
-│               │                              │
-│  ┌────────────┴───────────────────────────┐ │
-│  │    otbr-agent + Spinel Protocol        │ │
-│  └────────────┬───────────────────────────┘ │
-└───────────────┼──────────────────────────────┘
+┌───────────────┼─────────────────────────────────┐
+│  OpenThread Border Router (OTBR)               │
+│  ┌────────────┴──────────────────────────────┐ │
+│  │    otbr-agent + Spinel Protocol           │ │
+│  └────────────┬──────────────────────────────┘ │
+└───────────────┼─────────────────────────────────┘
                 │
-┌───────────────┴──────────────────────────────┐
-│     OpenThread RCP (nRF52840, etc.)         │
-└──────────────────────────────────────────────┘
+┌───────────────┴─────────────────────────────────┐
+│     OpenThread RCP (nRF52840, etc.)            │
+│              Thread Network                     │
+│     ┌────────────────────────────┐             │
+│     │  End Devices (1000+)       │             │
+│     │  - Sensors                 │             │
+│     │  - Actuators               │             │
+│     │  - Routers                 │             │
+│     └────────────────────────────┘             │
+└─────────────────────────────────────────────────┘
 ```
 
 ## License

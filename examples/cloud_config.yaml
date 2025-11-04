@@ -1,0 +1,85 @@
+# Example Cloud Connectivity Configurations
+
+# AWS IoT Core
+aws_iot:
+  name: "aws-production"
+  connection_type: "aws_iot"
+  config:
+    endpoint: "a3xxxxxxxxxx-ats.iot.us-east-1.amazonaws.com"
+    cert_path: "/etc/otbr/certs/aws-certificate.pem.crt"
+    key_path: "/etc/otbr/certs/aws-private.pem.key"
+    ca_path: "/etc/otbr/certs/AmazonRootCA1.pem"
+    region: "us-east-1"
+    client_id: "otbr-manager-prod"
+
+# Azure IoT Hub
+azure_iot:
+  name: "azure-production"
+  connection_type: "azure_iot"
+  config:
+    connection_string: "HostName=my-hub.azure-devices.net;DeviceId=otbr-manager;SharedAccessKey=xxxxxxxxxxxxx"
+    device_id: "otbr-manager"
+
+# Generic MQTT with TLS
+mqtt_secure:
+  name: "mqtt-broker-secure"
+  connection_type: "mqtt"
+  config:
+    broker: "mqtt.example.com"
+    port: 8883
+    provider: "generic_mqtt"
+    use_tls: true
+    ca_cert: "/etc/otbr/certs/ca.crt"
+    client_cert: "/etc/otbr/certs/client.crt"
+    client_key: "/etc/otbr/certs/client.key"
+    client_id: "otbr-manager"
+
+# Generic MQTT with username/password
+mqtt_auth:
+  name: "mqtt-broker-auth"
+  connection_type: "mqtt"
+  config:
+    broker: "mqtt.example.com"
+    port: 1883
+    provider: "generic_mqtt"
+    use_tls: false
+    username: "otbr_user"
+    password: "secure_password"
+    client_id: "otbr-manager"
+
+# Local Mosquitto for testing
+mqtt_local:
+  name: "local-mqtt"
+  connection_type: "mqtt"
+  config:
+    broker: "localhost"
+    port: 1883
+    provider: "generic_mqtt"
+    use_tls: false
+    client_id: "otbr-manager-dev"
+
+# HiveMQ Cloud
+hivemq_cloud:
+  name: "hivemq-cloud"
+  connection_type: "mqtt"
+  config:
+    broker: "your-cluster.s1.eu.hivemq.cloud"
+    port: 8883
+    provider: "generic_mqtt"
+    use_tls: true
+    username: "your_username"
+    password: "your_password"
+    client_id: "otbr-manager"
+
+# EMQX Cloud
+emqx_cloud:
+  name: "emqx-cloud"
+  connection_type: "mqtt"
+  config:
+    broker: "your-deployment.emqx.cloud"
+    port: 8883
+    provider: "generic_mqtt"
+    use_tls: true
+    username: "api_key"
+    password: "api_secret"
+    client_id: "otbr-manager"

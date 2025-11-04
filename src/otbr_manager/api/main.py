@@ -9,9 +9,10 @@ from contextlib import asynccontextmanager
 
 from ..database import init_db
 from ..config import settings
-from .routes import routers, devices, topologies, firmware, attenuators, sensors, commissioning
+from .routes import routers, devices, topologies, firmware, attenuators, sensors, commissioning, cloud
 from ..core.otbr_agent import otbr_agent
 from ..core.mdns_discovery import mdns_discovery
+from ..cloud.cloud_manager import cloud_manager
 
 
 # Configure logging
@@ -120,6 +121,7 @@ app.include_router(firmware.router, prefix="/api/v1/firmware", tags=["Firmware"]
 app.include_router(attenuators.router, prefix="/api/v1/attenuators", tags=["Attenuators"])
 app.include_router(sensors.router, prefix="/api/v1/sensors", tags=["Sensors"])
 app.include_router(commissioning.router, prefix="/api/v1/commissioning", tags=["Commissioning"])
+app.include_router(cloud.router, prefix="/api/v1/cloud", tags=["Cloud Connectivity"])
 
 
 if __name__ == "__main__":
